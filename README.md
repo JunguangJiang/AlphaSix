@@ -15,19 +15,25 @@
 5. 实现了训练时模型的定期保存和重新训练时的载入
     
 #### 尚未完成的部分
-1. 动态绘制训练过程的损失和熵，具体见文件夹info中的数据，绘制效果可以参考https://zhuanlan.zhihu.com/p/32089487中的结果图。
+1. 动态绘制训练过程的损失和熵，具体见文件夹info中的数据，绘制效果可以参考https://zhuanlan.zhihu.com/p/32089487 中的结果图。这个任务非常简单，但是后面调参的时候会用到，DDL：5.4
 2. 增加图形界面，要求如下
-    - 在命令行中运行python human_play_window.py打开图形界面程序。
-    - 上述命令提供和human_play.py相同的命令参数，具体参照human_play.py文件（这个文件请仔细阅读）
-    - 一开始需要有一个开始按钮(可以放在菜单栏中），点击开始按钮后， 弹出一个对话框，让人类玩家选择谁先下棋。
-    - 游戏的主界面背景为空白（不要加载任何图片！！！），由上述命令参数确定需要绘制的棋盘大小。
-    - 在棋盘上接受用户的鼠标点击，得到下棋的位置
+    - 在命令行中运行python human_play_window.py打开图形界面程序。上述命令提供和human_play.py相同的命令参数，具体参照human_play.py文件（这个文件请仔细阅读）DDL：12周周日晚
+    - 一开始需要有一个开始按钮(可以放在菜单栏中），点击开始按钮后， 弹出一个对话框，让人类玩家选择谁先下棋。DDL：12周周日晚
+    - 游戏的主界面背景为空白（不要加载任何图片！！！），由上述命令参数确定需要绘制的棋盘大小。DDL：12周周日晚
+    - 在棋盘上接受用户的鼠标点击，得到下棋的位置 DDL：13周周日晚
     - 实现思路可以参照human_play.py以及Qt的信号与槽机制。
     
 3. 15 x 15 下连六棋（感觉这个已经比较耗时间了，如果训练比较快，可以考虑增大模型）的模型训练，使用GPU训练模型（主要是之后要去实验室跑代码，需要理解目前我提供的命令行参数的意义）。
 4. 游戏规则的完善：增加时间限制（这个任务可选，如果没有时间，可以放弃）
 
-
+#### 文件说明
+- human_play.py 命令行界面中的人机对战实现，实现图形界面必看！！！
+- human_play_window.ui / human_play_window.py 图形界面代码
+- game.py 游戏和棋盘的实现
+- mcts_pure.py 纯粹的蒙特卡洛搜索树
+- mcts_pureZero.py 基于连六棋游戏风格的蒙特卡洛搜索树
+- policy_value_net_pytorch.py 深度强化神经网络的实现
+- train.py 神经网络训练
 
 ## AlphaZero-Gomoku
 This is an implementation of the AlphaZero algorithm for playing the simple board game Gomoku (also called Gobang or Five in a Row) from pure self-play training. The game Gomoku is much simpler than Go or chess, so that we can focus on the training scheme of AlphaZero and obtain a pretty good AI model on a single PC in a few hours. 
