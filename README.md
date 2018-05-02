@@ -1,6 +1,12 @@
 # AlphaZero-Six
 ## 连六棋的深度强化学习AI
 ### 相对于AlphaZero-Gomoku(说明文档见下方）的改变
+### 使用方法
+ - 实例 python human_play.py -s 5 -r 4 -m 400 -i model/5_5_4_best_policy_.model 可以运行一个5x5棋盘上的连四子棋
+ - 实例 python train.py -s 5 -r 4 -m 400 --graphics -n 100 -i model/5_5_4_best_policy_.model 是该模型的训练过程
+ - 具体请运行 python human_play.py -h 或者 python train.py -h 寻找帮助
+ - 当前模型的智力较低，一方面和训练时间太短有关系。此外我还在修改网络和蒙特卡洛搜索树中的bug，可以先将就着用上述模型。
+
 #### 已经完成的部分
 1. 提供了完善的命令行参数，方便神经网络训练时的调参
 2. 游戏规则的改变：原先的五子棋（不论禁手不禁手都存在黑方必胜的问题），改成连六棋后，大大增加了公平性。

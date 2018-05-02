@@ -115,6 +115,7 @@ class MCTS(object):
         State is modified in-place, so a copy must be provided.
         """
         node = self._root
+        current_player = state.get_current_player() # 发出当前动作的选手
         while(1):
             if node.is_leaf():
                 break
@@ -136,7 +137,7 @@ class MCTS(object):
                 leaf_value = 0.0
             else:
                 leaf_value = (
-                    1.0 if winner == state.get_current_player() else -1.0
+                    1.0 if winner == current_player else -1.0
                 )
 
         # Update value and visit count of nodes in this traversal.
@@ -188,7 +189,7 @@ class MCTSPlayer(object):
         self.player = p
 
     def reset_player(self):
-        self.mcts.update_with_move(-1)
+        self.mcts.update_with_move(-1, flag=True)
 
     def get_action(self, board, temp=1e-3, return_prob=0):
         sensible_moves = board.availables
@@ -223,4 +224,4 @@ class MCTSPlayer(object):
             print("WARNING: the board is full")
 
     def __str__(self):
-        return "MCTS {}".format(self.player)
+        return "Alpha Zero MCTS {}".format(self.player)

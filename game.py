@@ -77,11 +77,6 @@ class Board(object):
                 square_state[2][move // self.height, move % self.height] = 1.0
             for move in self.curr_moves:
                 square_state[3][move // self.height, move % self.height] = 1.0
-        #     # indicate the last move location
-        #     square_state[2][self.last_move // self.width,
-        #                     self.last_move % self.height] = 1.0
-        # if len(self.states) % 2 == 0:
-        #     square_state[3][:, :] = 1.0  # indicate the colour to play
         return square_state[:, ::-1, :]
 
     def do_move(self, move):
