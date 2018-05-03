@@ -25,14 +25,14 @@ class TreeNode(object):
     its visit-count-adjusted prior score u.
     """
 
-    def __init__(self, parent, prior_p, flag=1):
+    def __init__(self, parent, prior_p):
         self._parent = parent
         self._children = {}  # a map from action to TreeNode
         self._n_visits = 0
         self._Q = 0
         self._u = 0
         self._P = prior_p
-        self.flag = flag # 代表是否为对应选手所下的最后一步棋
+        # self.flag = flag # 代表是否为对应选手所下的最后一步棋
 
     def expand(self, action_priors):
         """Expand tree by creating new children.
@@ -41,7 +41,7 @@ class TreeNode(object):
         """
         for action, prob in action_priors:
             if action not in self._children:
-                self._children[action] = TreeNode(self, prob, 1 - self.flag)
+                self._children[action] = TreeNode(self, prob)
 
     def select(self, c_puct):
         """Select action among children that gives maximum action value Q
@@ -61,15 +61,17 @@ class TreeNode(object):
         # Update Q, a running average of values for all visits.
         self._Q += 1.0*(leaf_value - self._Q) / self._n_visits
 
-    def update_recursive(self, leaf_value):
+    def update_recursive(self, leaf_value, flag):
         """Like a call to update(), but applied recursively for all ancestors.
+        flag=1表示当前棋子是对应选手下的第2个棋子，其父节点是选手下的第一个棋子
+        leaf_value是从父节点的视角看，选哪个子节点比较好
         """
         # If it is not root, this node's parent should be updated first.
         if self._parent:
-            if self.flag:
-                self._parent.update_recursive(leaf_value)
-            else: # 如果当前树节点对应选手发的第一个棋子，则父节点对应另外一个选手
-                self._parent.update_recursive(-leaf_value)
+            if flag:
+                self._parent.update_recursive(-leaf_value, 1-flag)
+            else:
+                self._parent.update_recursive(leaf_value, 1-flag)
         self.update(leaf_value)
 
     def get_value(self, c_puct):
@@ -115,7 +117,7 @@ class MCTS(object):
         State is modified in-place, so a copy must be provided.
         """
         node = self._root
-        current_player = state.get_current_player() # 发出当前动作的选手
+        # current_player = state.get_current_player() # 发出当前动作的选手
         while(1):
             if node.is_leaf():
                 break
@@ -137,13 +139,16 @@ class MCTS(object):
                 leaf_value = 0.0
             else:
                 leaf_value = (
-                    1.0 if winner == current_player else -1.0
+                    1.0 if winner == state.get_current_player() else -1.0
                 )
 
         # Update value and visit count of nodes in this traversal.
         # node.update_recursive(-leaf_value) #存疑
-        node.update_recursive(leaf_value)
-
+        # node.update_recursive(leaf_value)
+        if state.chesses == 2:
+            node.update_recursive(-leaf_value, 0)
+        else:
+            node.update_recursive(leaf_value, 1)
 
     def get_move_probs(self, state, temp=1e-3):
         """Run all playouts sequentially and return the available actions and
@@ -163,7 +168,7 @@ class MCTS(object):
 
         return acts, act_probs
 
-    def update_with_move(self, last_move, flag=1):
+    def update_with_move(self, last_move):
         """Step forward in the tree, keeping everything we already know
         about the subtree.
         """
@@ -171,7 +176,7 @@ class MCTS(object):
             self._root = self._root._children[last_move]
             self._root._parent = None
         else:
-            self._root = TreeNode(None, 1.0, flag=flag)
+            self._root = TreeNode(None, 1.0)
 
     def __str__(self):
         return "MCTS"
@@ -189,7 +194,7 @@ class MCTSPlayer(object):
         self.player = p
 
     def reset_player(self):
-        self.mcts.update_with_move(-1, flag=True)
+        self.mcts.update_with_move(-1)
 
     def get_action(self, board, temp=1e-3, return_prob=0):
         sensible_moves = board.availables
@@ -212,7 +217,7 @@ class MCTSPlayer(object):
                 # to choosing the move with the highest prob
                 move = np.random.choice(acts, p=probs)
                 # reset the root node
-                self.mcts.update_with_move(-1, flag=2-board.chesses) #如果当前棋盘有2个棋子，说明当前动作是下棋者下的第一个棋子
+                self.mcts.update_with_move(-1)
 #                location = board.move_to_location(move)
 #                print("AI move: %d,%d\n" % (location[0], location[1]))
 

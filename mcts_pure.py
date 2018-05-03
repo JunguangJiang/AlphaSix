@@ -30,14 +30,14 @@ class TreeNode(object):
     prior probability P, and its visit-count-adjusted prior score u.
     """
 
-    def __init__(self, parent, prior_p, flag=True):
+    def __init__(self, parent, prior_p):
         self._parent = parent
         self._children = {}  # a map from action to TreeNode
         self._n_visits = 0
         self._Q = 0
         self._u = 0
         self._P = prior_p
-        self.flag = flag # 代表是否为对应选手所下的最后一步棋
+        # self.flag = flag # 代表是否为对应选手所下的最后一步棋
 
 
     def expand(self, action_priors):
@@ -47,7 +47,7 @@ class TreeNode(object):
         """
         for action, prob in action_priors:
             if action not in self._children:
-                self._children[action] = TreeNode(self, prob, 1-self.flag)
+                self._children[action] = TreeNode(self, prob)
 
     def select(self, c_puct):
         """Select action among children that gives maximum action value Q
@@ -67,15 +67,16 @@ class TreeNode(object):
         # Update Q, a running average of values for all visits.
         self._Q += 1.0*(leaf_value - self._Q) / self._n_visits
 
-    def update_recursive(self, leaf_value):
+    def update_recursive(self, leaf_value, flag):
         """Like a call to update(), but applied recursively for all ancestors.
+        flag = 1时self.parent需要变号，否则不需要变号
         """
         # If it is not root, this node's parent should be updated first.
         if self._parent:
-            if self.flag:
-                self._parent.update_recursive(leaf_value)
-            else: # 如果当前树节点对应选手发的第一个棋子，则父节点对应另外一个选手
-                self._parent.update_recursive(-leaf_value)
+            if flag:
+                self._parent.update_recursive(-leaf_value, 1-flag)
+            else:
+                self._parent.update_recursive(leaf_value, 1-flag)
         self.update(leaf_value)
 
     def get_value(self, c_puct):
@@ -111,7 +112,7 @@ class MCTS(object):
             converges to the maximum-value policy. A higher value means
             relying on the prior more.
         """
-        self._root = TreeNode(None, 1.0, flag=1)
+        self._root = TreeNode(None, 1.0)
         self._policy = policy_value_fn
         self._c_puct = c_puct
         self._n_playout = n_playout
@@ -138,7 +139,10 @@ class MCTS(object):
         # Evaluate the leaf node by random rollout
         leaf_value = self._evaluate_rollout(state)
         # Update value and visit count of nodes in this traversal.
-        node.update_recursive(-leaf_value)
+        if state.chesses == 2:
+            node.update_recursive(-leaf_value, 0)
+        else:
+            node.update_recursive(leaf_value, 1)
 
 
     def _evaluate_rollout(self, state, limit=1000):
@@ -174,7 +178,7 @@ class MCTS(object):
         return max(self._root._children.items(),
                    key=lambda act_node: act_node[1]._n_visits)[0]
 
-    def update_with_move(self, last_move, flag=1):
+    def update_with_move(self, last_move):
         """Step forward in the tree, keeping everything we already know
         about the subtree.
         """
@@ -182,10 +186,10 @@ class MCTS(object):
             self._root = self._root._children[last_move]
             self._root._parent = None
         else:
-            self._root = TreeNode(None, 1.0, flag=flag)
+            self._root = TreeNode(None, 1.0)
 
     def __str__(self):
-        return "Pure MCTS"
+        return "MCTS"
 
 
 class MCTSPlayer(object):
@@ -203,10 +207,10 @@ class MCTSPlayer(object):
         sensible_moves = board.availables
         if len(sensible_moves) > 0:
             move = self.mcts.get_move(board)
-            self.mcts.update_with_move(-1, flag=2-board.chesses)
+            self.mcts.update_with_move(-1)
             return move
         else:
             print("WARNING: the board is full")
 
     def __str__(self):
-        return "MCTS {}".format(self.player)
+        return "Pure MCTS {}".format(self.player)

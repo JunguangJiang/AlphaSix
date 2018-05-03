@@ -7,7 +7,7 @@
 
 from __future__ import print_function
 import numpy as np
-
+import copy
 
 class Board(object):
     """board for the game"""
@@ -96,7 +96,7 @@ class Board(object):
             self.players[0] if self.current_player == self.players[1]
             else self.players[1]
         )
-        self.last_moves = self.curr_moves
+        self.last_moves = copy.deepcopy(self.curr_moves)
         self.curr_moves.clear()
 
     def has_a_winner(self):

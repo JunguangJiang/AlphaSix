@@ -94,7 +94,7 @@ class TrainPipeline():
             play_data = list(play_data)[:]
             self.episode_len = len(play_data)
             # augment the data
-            play_data = self.get_equi_data(play_data)
+            # play_data = self.get_equi_data(play_data)
             self.data_buffer.extend(play_data)
 
     def policy_update(self):
