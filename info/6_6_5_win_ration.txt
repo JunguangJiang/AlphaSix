@@ -1,2 +1,0 @@
-self-play次数, pure_MCTS战力， 胜率
-50,1000,0.4

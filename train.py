@@ -193,7 +193,7 @@ class TrainPipeline():
                                                      +'_'+str(self.board_width)
                                                      +'_'+str(self.n_in_row)+
                                                      '_current_policy_'+output_file_name+'.model')
-                    if win_ratio > self.best_win_ratio:
+                    if win_ratio >= self.best_win_ratio:
                         print("New best policy!!!!!!!!")
                         self.best_win_ratio = win_ratio
                         # update the best_policy
@@ -202,7 +202,7 @@ class TrainPipeline():
                                                      +'_'+str(self.n_in_row)+
                                                      '_best_policy_'+output_file_name+'.model')
                         if (self.best_win_ratio == 1.0 and
-                                self.pure_mcts_playout_num < 5000):
+                                self.pure_mcts_playout_num < 50000):
                             self.pure_mcts_playout_num += 1000
                             self.best_win_ratio = 0.0
         except KeyboardInterrupt:

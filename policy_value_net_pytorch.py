@@ -136,7 +136,8 @@ class PolicyValueNet():
         log_act_probs, value = self.policy_value_net(state_batch)
         # define the loss = (z - v)^2 - pi^T * log(p) + c||theta||^2
         # Note: the L2 penalty is incorporated in optimizer
-        value_loss = F.mse_loss(value.view(-1), winner_batch)
+        mseloss = nn.MSELoss()
+        value_loss = mseloss(value.view(-1), winner_batch)
         policy_loss = -torch.mean(torch.sum(mcts_probs*log_act_probs, 1))
         loss = value_loss + policy_loss
         # backward and optimize
@@ -146,7 +147,10 @@ class PolicyValueNet():
         entropy = -torch.mean(
                 torch.sum(torch.exp(log_act_probs) * log_act_probs, 1)
                 )
-        return loss.item(), entropy.item()
+        if self.use_gpu:
+            return loss.cpu().data[0],entropy.cpu().data[0]
+        else:
+            return loss.item(), entropy.item()
 
     def get_policy_param(self):
         net_params = self.policy_value_net.state_dict()
@@ -159,5 +163,6 @@ class PolicyValueNet():
 
     def load_model(self, model_file):
         """load model params from file"""
-        net_params = torch.load(model_file)
+        # net_params = torch.load(model_file)
+        net_params = torch.load(model_file, map_location=lambda storage, loc:storage)
         self.policy_value_net.load_state_dict(net_params)

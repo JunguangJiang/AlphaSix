@@ -1,9 +1,16 @@
 # AlphaZero-Six
 ## 连六棋的深度强化学习AI
 ### 相对于AlphaZero-Gomoku(说明文档见下方）的改变
+### 在写实验报告时可以参考的一些东西
+- 文档还需要补充程序模块划分和功能说明、实验结果及分析、图形界面展示、参考文献，可以直接在latex中修改或者以word的形式发给我。
+- 已有的实验结果在result文件夹中，其数值含义参见https://zhuanlan.zhihu.com/p/32089487
+- 上述实验结果的绘制结果已放在Latex文件夹中
+- 如何衡量机器的训练结果？一个是可以让ai和纯蒙特卡洛搜索树的ai对战，或者和alpha-beta剪枝的ai对战，测试比赛结果。另外一个可以是和人对战，记录棋局中的视频、截图，分析ai在训练后学会了什么下法。分析训练结果的优点和不足。对神经网络的选择、棋局表示的选择等提出建议。
+- 上述内容只是建议。
+
 ### 使用方法
- - 实例 python human_play.py -s 8 -r 5 -m 800 -i model/8_8_5_best_policy_.model 和AI玩一局8x8棋盘上的连五棋
- - 实例 python train.py -s 8 -r 5 -m 800 --graphics -n 2000 -i model/8_8_5_current_policy_.model 是模型的训练过程
+ - 实例 python human_play.py -s 10 -r 6 -m 800 -i model/10_10_6_best_policy_3.model 是对战的命令,使用时可以修改选择的模型文件
+ - 实例 python train.py -s 10 -r 6 -m 800 --graphics -n 2000 -i model/10_10_6_current_policy_.model 是模型的训练命令
  - 具体请运行 python human_play.py -h 或者 python train.py -h 寻找帮助
 
 #### 已经完成的部分
@@ -18,9 +25,10 @@
     - 第四个矩阵表示我方在该回合已经下的棋子
     - 由于改变了游戏规则，具体是谁先手已经不再重要，因此原先表示先后手的矩阵被移除
 5. 实现了训练时模型的定期保存和重新训练时的载入
-    
-#### 尚未完成的部分
 1. 动态绘制训练过程的损失和熵，具体见文件夹info中的数据，绘制效果可以参考https://zhuanlan.zhihu.com/p/32089487 中的结果图。这个任务非常简单，但是后面调参的时候会用到，DDL：5.4
+
+#### 尚未完成的部分
+
 2. 增加图形界面，要求如下
     - 在命令行中运行python human_play_window.py打开图形界面程序。上述命令提供和human_play.py相同的命令参数，具体参照human_play.py文件（这个文件请仔细阅读）DDL：12周周日晚
     - 一开始需要有一个开始按钮(可以放在菜单栏中），点击开始按钮后， 弹出一个对话框，让人类玩家选择谁先下棋。DDL：12周周日晚
