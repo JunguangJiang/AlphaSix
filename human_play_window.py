@@ -52,6 +52,20 @@ model_file = 'model/8_8_5_best_policy_.model'
 use_gpu = False# I don't know why but I just cannot use cuda in my computer = =
 n_playout = 800
 
+
+class cycleGroup(tuple):
+    def __init__(self, parent):
+        self.elements = parent
+        self.order = len(parent)
+        self.point = 0
+    def pointTurnRight(self):
+        self.point = (self.point + 1) % self.order
+    def pointTurnLeft(self):
+        self.point = (self.point + self.order - 1) % self.order
+    def element(self):
+        return self.elements[self.point]
+
+
 class LaBel(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
@@ -62,6 +76,7 @@ class LaBel(QLabel):
   
 # test PyQt5 codes
 class HumanWindow(QWidget):
+    # def
     mysignal = pyqtSignal(str)
     placeChess = pyqtSignal(int, int)
     def __init__(self):
@@ -74,11 +89,22 @@ class HumanWindow(QWidget):
         #self.setGeometry(300, 300, 250, 150)
 #        best_policy = PolicyValueNet(8, 8, "model/6_6_4_best_policy.model", use_gpu=1) # 加载最佳策略网络
 #        mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=n_playout) # 生成一个AI玩家
+        self.isFirstMove = True
         
         best_policy = PolicyValueNet(width, height, model_file=model_file, use_gpu=use_gpu) # 加载最佳策略网络
         mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=n_playout) # 生成一个AI玩家
         self.AIPlayer = mcts_player
         self.ai_down = True
+        
+        #set 2 kinds of chesses#
+        self.black = QPixmap('black.png')
+        self.white = QPixmap('white.png')
+        #set order cycle#
+        cycle = (self.black, self.black, self.white, self.white)
+        self.chesses = cycleGroup(cycle)
+        #set colors of players
+        self.colorToPlayer = {self.black:'AI', self.white:'HM'}
+
         
         self.board = Board()
         self.board.width = 8
@@ -125,18 +151,20 @@ class HumanWindow(QWidget):
         self.button = QPushButton("开始", self)
         self.button.setFocusPolicy(QtCore.Qt.NoFocus)
         self.button.setGeometry(100, 100, 60, 35)
-        self.button.clicked.connect(self.msg)  
+        self.button.clicked.connect(self.askForFirst)  
         
-    def msg(self):
+    def askForFirst(self):
         message = QMessageBox()
         reply = message.question(self, '询问', '是否AI先手？', QMessageBox.Yes | QMessageBox.No)
         
         if reply == QMessageBox.Yes:
             ai_first = 1
+            self.chesses.point = 1
             self.my_turn = False
             self.board.init_board(1)
         else:
             ai_first = 0
+            self.chesses.point = 3
             self.my_turn = True
             self.board.init_board(0)
         print('ai_first = ', ai_first)
@@ -147,8 +175,8 @@ class HumanWindow(QWidget):
         
     def showBoard(self):
         print("showBoard begins")
-        self.black = QPixmap('black.png')
-        self.white = QPixmap('white.png')
+        
+                
         palette1 = QPalette()  # 设置棋盘背景
         palette1.setBrush(self.backgroundRole(), QtGui.QBrush(QtGui.QPixmap('chessboard.jpg')))
         self.setPalette(palette1)
@@ -173,18 +201,22 @@ class HumanWindow(QWidget):
         self.mouse_point.setPixmap(self.black)  #加载黑棋
         self.mouse_point.setGeometry(270, 270, PIECE, PIECE)
         
+        
         self.pieces = [LaBel(self) for i in range(SIZE * SIZE)]  # 新建棋子标签，准备在棋盘上绘制棋子
         for piece in self.pieces:
             piece.setVisible(True)  # 图片可视
             piece.setScaledContents(True)  #图片大小根据标签大小可变
         print("hhh")
+        
         self.mouse_point.raise_()  # 鼠标始终在最上层
         self.ai_down = True  # AI已下棋，主要是为了加锁，当值是False的时候说明AI正在思考，这时候玩家鼠标点击失效，要忽略掉 mousePressEvent
 
         self.setMouseTracking(True)
-        
-############Redefine the mouse event functions########           
-    def mouseMoveEvent(self, e): # 黑色棋子随鼠标移动
+        if self.colorToPlayer[self.chesses.element()] == 'AI':
+            self.turnToAiPlayer()
+############Redefine the mouse event functions########    
+        # By redefining mouseMoveEvent() we aim to set the mouse effect#
+    def mouseMoveEvent(self, e): 
         # self.lb1.setText(str(e.x()) + ' ' + str(e.y()))
         self.mouse_point.move(e.x() - 16, e.y() - 16)
     """Here is our main body of codes for playing chess"""    
@@ -194,7 +226,10 @@ class HumanWindow(QWidget):
             i, j = self.coordinate_transform_pixel2map(x, y)
             if self.isLegalCoordinates(i, j):
                 self.applyCoordinates(i, j)
-                self.turnToAiPlayer()
+                if self.colorToPlayer[self.chesses.element()] == 'AI':
+                    self.turnToAiPlayer()
+            else:
+                print("Move not legal")
         elif e.button() is not Qt.LeftButton:
             print("Left Button Please :-) ")
         else:
@@ -219,21 +254,21 @@ class HumanWindow(QWidget):
         move = self.board.location_to_move([i, j])
         self.board.do_move(move)
         self.draw(i, j)
-        print("human move ends~")
+        print("\nhuman move ends~")
         location = self.board.move_to_location(move)
         print("with location ", location)
-        self.ai_down = 0
         self.endTest()
+        if self.colorToPlayer[self.chesses.element()] == 'AI':
+            self.turnToAiPlayer()
     
     def turnToAiPlayer(self):
         move = self.AIPlayer.get_action(self.board)
         self.board.do_move(move)
         location = self.board.move_to_location(move)
         self.draw(location[0], location[1])
-        print("AI move ends~")
+        print("\nAI move ends~")
         location = self.board.move_to_location(move)
         print("with location ", location)
-        self.ai_down = 1
         self.endTest()
         
     def endTest(self):
@@ -255,31 +290,20 @@ class HumanWindow(QWidget):
         sys.exit(0)
     # end of design of exiting button
 ###################################################### 
+    """Place chesses in the chessboard"""
     def draw(self, i, j):
         x, y = self.coordinate_transform_map2pixel(i, j)
+        self.pieces[self.step].setPixmap(self.chesses.element())
+        self.pieces[self.step].setGeometry(x, y, PIECE, PIECE)
+        self.step+=1
+        self.chesses.pointTurnRight()
 
-        if self.piece_now == BLACK:
-            self.pieces[self.step].setPixmap(self.black)  # 放置黑色棋子
-            self.piece_now = WHITE
-            #self.chessboard.draw_xy(i, j, BLACK)
-        else:
-            self.pieces[self.step].setPixmap(self.white)  # 放置白色棋子
-            self.piece_now = BLACK
-            #self.chessboard.draw_xy(i, j, WHITE)
-
-        self.pieces[self.step].setGeometry(x, y, PIECE, PIECE)  # 画出棋子
-        #self.sound_piece.play()  # 落子音效
-        self.step += 1  # 步数+1
-
-#        winner = self.chessboard.anyone_win(i, j)  # 判断输赢
-#        if winner != EMPTY:
-#            self.mouse_point.clear()
-#            self.gameover(winner)
         
     ################Cordinates Transformation################
     # self-defined functions offering transformation between 
     # pixel cordinates and 
     # relative grid cordinates
+    
     def coordinate_transform_map2pixel(self, i, j):
         # 从 chessMap 里的逻辑坐标到 UI 上的绘制坐标的转换
         return MARGIN + j * GRID - PIECE / 2, MARGIN + i * GRID - PIECE / 2
