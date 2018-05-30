@@ -79,7 +79,7 @@ if __name__ == '__main__':
     n_in_row = 4
     use_gpu = False
     n_playout = 400
-    model_file = "model/6_6_4_best_policy.model"
+    model_file = "model/5_5_4_best_policy.model"
     ai_first=True
 
     opts, args = getopt.getopt(sys.argv[1:], "hs:r:m:i:", ["use_gpu", "graphics", "human_first"])
