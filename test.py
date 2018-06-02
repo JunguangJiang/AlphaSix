@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+##############ONLY for testing################
 WIDTH = 540
 HEIGHT = 540
 MARGIN = 22
@@ -12,9 +14,9 @@ width = 8
 height = 8
 n_in_row = 5
 model_file = 'model/8_8_5_best_policy_.model'
-use_gpu = False# I don't know why but I just cannot use cuda in my computer = =
+use_gpu = False
 n_playout = 800
-
+##############################################
 from game import *
 from mcts_alphaZero import MCTSPlayer
 from policy_value_net_pytorch import PolicyValueNet  # Pytorch
@@ -29,6 +31,16 @@ import threading
 
 global AIChess
 
+##################A Tool for arrangement of playing order###################
+#The point is to treat the game routine as a cycle, like
+#         
+#         1        2        3        4         
+#    -> HUMAN -> HUMAN  ->  AI  ->  AI --
+#    |                                   |
+#    |                                   |
+#    ------------------------------------
+#
+#and our game will start from position 2 or 4.
 
 class cycleGroup(tuple):
     def __init__(self, parent):
@@ -41,7 +53,7 @@ class cycleGroup(tuple):
         self.point = (self.point + self.order - 1) % self.order
     def element(self):
         return self.elements[self.point]
-    
+############################################################################
 
 class chessDetail(object):
     def __init__(self, i=0, j=0, x=0, y=0, chess=0, chessPic=None):
