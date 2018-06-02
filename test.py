@@ -59,9 +59,6 @@ class ChessBoard(QWidget):
     signalDraw_Finished = pyqtSignal(bool)
     def __init__(self):
         super(ChessBoard, self).__init__()
-#        self.__board = [[EMPTY for n in range(15)] for m in range(15)]
-#        self.__dir = [[(-1, 0), (1, 0)], [(0, -1), (0, 1)], [(-1, 1), (1, -1)], [(-1, -1), (1, 1)]]
-#        #                (左      右)      (上       下)     (左下     右上)      (左上     右下)
         
     def initialize(self, scale):
         self.graphicsParameterSet(scale)
