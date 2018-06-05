@@ -256,10 +256,12 @@ class HumanWindow(QWidget):
         self.draw(i, j)
         print("\nhuman move ends~")
         location = self.board.move_to_location(move)
+        self.update()
+        QApplication.processEvents()
         print("with location ", location)
         self.endTest()
-        if self.colorToPlayer[self.chesses.element()] == 'AI':
-            self.turnToAiPlayer()
+        # if self.colorToPlayer[self.chesses.element()] == 'AI':
+        #     self.turnToAiPlayer()
     
     def turnToAiPlayer(self):
         move = self.AIPlayer.get_action(self.board)

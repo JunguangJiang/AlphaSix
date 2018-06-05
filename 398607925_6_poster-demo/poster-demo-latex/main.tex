@@ -1,0 +1,117 @@
+% Latex template: mahmoud.s.fahmy@students.kasralainy.edu.eg
+
+\documentclass[portrait]{a0poster}	% Document class and orientation
+    \setlength{\paperwidth}{60cm}	% Poster width in cm
+    \setlength{\paperheight}{140cm}	% Poster height in cm
+
+\usepackage[margin=1in]{geometry}	% Set poster margins in inches
+
+\usepackage{multicol}				% Use multiple columns
+    \columnsep=100pt				% Set space between columns in points
+    \columnseprule=3pt 				% Set width of line between columns in points
+
+\usepackage{graphicx}				% For adding images
+\usepackage{float}					% For using float environments
+\usepackage{booktabs}				% For table rules
+\usepackage{times}					% For times font
+\usepackage{lipsum}					% For generating random text
+\usepackage{ctex} %中文包
+\usepackage{amsmath} %数学包
+\usepackage[url=false,doi=false,giveninits=true,isbn=false]{biblatex}	% Use biblatex
+	\addbibresource{references.bib}										% Add .bib file
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title Mini-page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{minipage}{\textwidth}
+	% Title Area
+	\begin{minipage}{.86\textwidth}
+    	% Add title here
+		\Huge\textbf{基于深度强化学习和蒙特卡洛搜索树的连六棋AI}\\
+		
+        % Add authors here
+        % Link to different affiliations, if there are, using in-line math mode
+        \par\huge 江俊广 $^1$, 陈宇韶$^1$ and 郑洛成$^1$\\
+        
+        % Add affiliations here
+		\large $^1$Tsinghua University\\ 
+	\end{minipage}
+	\begin{minipage}[b]{.12\textwidth}
+    	% Add university logo here
+		\begin{figure}[H]
+        	\flushright
+			\includegraphics[width=9cm]{tsinghua.jpg}
+		\end{figure}
+	\end{minipage}
+\end{minipage}
+
+\vspace{1cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Main Text 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{multicols}{2}
+
+% Summary Section
+% This section is divided into four standard subsections Background, Methods, Results and Conclusions. Either can be written as a subsection (e.g. \subsection{Background}) or just as bold-face regular text (e.g. \textbf{Background}) to have all in one paragraph. Figs or Tabs can be referenced using \ref{<figure-label>}. References can be cited using \cite{<citation-id>}
+
+\section*{Summary}
+
+\noindent\textbf{Background}
+我们一开始打算设计五子棋的AI，然而五子棋本身规则具有一定缺陷。首先，实际比赛中五子棋先后手优势差距比较大，先手往往能够决定胜局，所以历史上各国的棋手们采取一系列方法限制先手的优势来达到平衡先后手的目的，但仍然不能够很好解决问题，同时容易导致规则过于复杂。Github上的AlphaZero-Gomoku是基于无禁手规则五子棋AI，但是在实际运行中出现的问题是，后手人类比较难战胜先手AI，后手AI也比较难战胜先手人类。所以我们考虑更改五子棋为连六棋，即连成六子获胜。持黑者第一手放一个黑子于棋盘上，之后双方轮流著手，每手放二个棋子于棋盘上。这样可以保证游戏的公平性，因为各方每次下完一手后，盘面都比对方多一子，因此赛局可自然达成平衡的状态，这使得公平性大为提升。另外六子棋不具有先手优势。所以也不需要为了保持公平性，而制定一些额外的规则。理论上游戏所使用的棋盘可以是无限大的。对一般玩家而言，采用围棋的十九路棋盘即可。\par
+
+\noindent\textbf{Methods} 
+\section{规则的改变和公平性的保证}
+连六棋改变了游戏规则，除了将获胜条件由五连子改为六连子之外，还有第二手及之后每一手投两个子。这样可以保证游戏的公平性，因为各方每次下完一手后，盘面都比对方多一子，因此赛局可自然达成平衡的状态，这使得公平性大为提升。另外六子棋不具有先手优势。所以也不需要为了保持公平性，而制定一些额外的规则。
+
+\section{蒙特卡洛搜索树的调整}
+\paragraph{调整原因}
+连六棋每一回合可以走两个棋子，因此走法复杂度是相同规模的五子棋的走法复杂度的平方，尽管搜索树的深度变成了原先的一半。更大的问题是神经网络的输出表示变得比较复杂，原先用棋盘大小的概率矩阵表示，现在必须用$\text{棋盘大小}^2$的概率矩阵表示。
+\paragraph{解决方法}采用贪心决策，即每一回合的每步都选尽可能是当前局面最优的棋子。AI在棋盘上选择一个棋子后，基于新的棋盘再选择一个棋子。尽管不能保证两步结合后一定是最优决策，但是不会太差，同时可以使得走法复杂度降低一个平方数量级，同时使得神经网络的输出较为简洁。
+\paragraph{具体修改}修改蒙特卡洛搜索树的树节点，原先是父子结点代表两个对手，现在是爷爷和孙子节点代表两个对手，在从叶节点向上传递局面评估值的时候需要判断何时取反。
+\section{神经网络输入的调整——棋盘状态的表示}
+AlphaGo Zero中，一共使用了17个二值特征平面来描述当前局面，其中前16个平面描述了最近8步对应的双方player的棋子位置，最后一个平面描述当前player对应的棋子颜色，即先后手
+
+五子棋用“4个的二值特征平面”表示，其中前两个平面分别表示当前player的棋子位置和对手player的棋子位置，有棋子的位置是1，没棋子的位置是0. 然后第三个平面表示对手player最近一步的落子位置，也就是整个平面只有一个位置是1，其余全部是0. 第四个平面，也就是最后一个平面表示的是当前player是不是先手player，如果是先手player则整个平面全部为1，否则全部为0。
+
+连六棋用4个二值特征平面表示，前两个平面分别表示当前player的棋子位置和对手player的棋子位置，有棋子的位置是1，没棋子的位置是0。第三个平面表示对手player最近一回合下的所有棋子， 整个平面最多2个1，其余全部是0。第四个平面表示当前player在该回合已经下的棋子，整个平面最多1个1，其余全部是0。由于连六棋中，先后手并没有什么太大的区别，因此去除了五子棋中表示先后手的平面。
+
+\noindent\textbf{Results} 
+\lipsum[1] 
+
+\noindent\textbf{Conclusion} 
+\lipsum[1]
+
+% Figures and Tables Section
+% A regular float (figure or table) environment can be used given that the floating option '[H]' is used. 
+\section*{Figures \& Tables}
+
+% Input tables
+\input{tables/table1.tex}
+
+% Include figures 
+\begin{figure}[H]
+	\centering
+    \includegraphics[width=35cm]{figures/figure1.png}
+    \caption{Caption for figure one.}
+    \label{fig:figure1}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+    \includegraphics[width=35cm]{figures/figure2.png}
+    \caption{Caption for figure Two.}
+    \label{fig:figure2}
+\end{figure}
+
+% Reference section
+\printbibliography
+
+\end{multicols}
+
+\end{document}
+
